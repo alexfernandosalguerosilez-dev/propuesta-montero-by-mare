@@ -1,1 +1,161 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f8e7ed">
+<link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='icon-192.png') }}">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="By Mare">
+<title>Propuesta Montero By Mare</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="top">
+  <div class="brandmark">♡</div>
+  <div class="brandwrap"><div class="brand">PROPUESTA MONTERO</div><div class="by">BY MARE · AGENDA DE RESERVAS</div></div>
+  <div class="top-actions"><button class="notify-btn" id="enableNotifications" type="button">♡ Activar avisos</button><form method="post" action="{{ url_for('logout') }}"><button class="logout-btn" type="submit" title="Cerrar sesión">Salir ↗</button></form></div>
+</header>
+<main class="wrap">
+{% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for cat,msg in messages %}<div class="notice {{cat}}">{{msg}}</div>{% endfor %}{% endif %}{% endwith %}
+{% if edit %}
+<section class="panel formpanel">
+<h1>Editar reserva</h1>
+<form method="post" action="{{url_for('guardar')}}" class="booking-form">
+<input type="hidden" name="id" value="{{edit.id}}">
+{% set r=edit %}
+{% include 'form_fields.html' %}
+<div class="actions"><button class="primary">Guardar cambios</button><a class="ghost" href="{{url_for('home', day=edit.fecha)}}">Cancelar</a></div>
+</form></section>
+{% else %}
+<section class="welcome">
+<div><span class="eyebrow">AGENDA ROMÁNTICA</span><h1>Un momento especial<br><em>comienza aquí.</em></h1><p>Organiza tus propuestas, fechas y pagos en un solo lugar.</p></div>
+<div class="heart-art">♡</div>
+</section>
+<section class="stats">
+<div class="stat"><span>Reservas</span><b>{{rows|length}}</b></div>
+<div class="stat"><span>Ventas catálogo</span><b>Bs {{'%.0f'|format(total)}}</b></div>
+<div class="stat"><span>Recibido</span><b>Bs {{'%.0f'|format(paid)}}</b></div>
+</section>
+<div class="sectionhead"><div><span class="eyebrow">ORGANIZACIÓN</span><h2>Calendario</h2></div><a class="newbtn" href="#nueva">＋ Nueva reserva</a></div>
+<section class="panel calendar">
+<div class="calhead">
+<a class="arrow" href="{{url_for('home',year=year,month=month-1,day=selected)}}">‹</a><h3>{{month_name}} {{year}}</h3><a class="arrow" href="{{url_for('home',year=year,month=month+1,day=selected)}}">›</a>
+</div>
+<div class="weekdays">{% for d in ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'] %}<span>{{d}}</span>{% endfor %}</div>
+<div class="days">{% for week in weeks %}{% for d in week %}
+<a class="day {% if d.month != month %}muted{% endif %} {% if d.isoformat()==today %}today{% endif %} {% if d.isoformat()==selected %}chosen{% endif %}" href="{{url_for('home',year=year,month=month,day=d.isoformat())}}">
+<span>{{d.day}}</span>{% if by_day.get(d.isoformat()) %}<i></i>{% endif %}
+</a>{% endfor %}{% endfor %}</div>
+<div class="legend"><i></i> Día con reserva <span>·</span> Selecciona una fecha para ver sus eventos</div>
+</section>
+<section class="panel agenda">
+<div class="agenda-title"><div><span class="eyebrow">DETALLE DEL DÍA</span><h2>{{selected}}</h2></div><span class="count">{{selected_rows|length}} reservas</span></div>
+{% if selected_rows %}
+{% for r in selected_rows %}
+<div class="booking">
+<div class="time">{{r.hora}}</div><div class="bookinginfo"><b>{{r.cliente}}</b><span>{{r.lugar}} · {{r.paquete or 'Sin paquete'}}</span>
+<small>Precio Bs {{'%.2f'|format(r.precio_catalogo|float)}} · Pagó Bs {{'%.2f'|format(r.pagado|float)}} · Saldo Bs {{'%.2f'|format((r.precio_catalogo|float)-(r.pagado|float))}}</small></div>
+<a class="edit" href="{{url_for('editar',rid=r.id)}}">Editar</a>
+<form method="post" action="{{url_for('eliminar',rid=r.id)}}" onsubmit="return confirm('¿Eliminar esta reserva?')"><button class="delete">×</button></form>
+</div>
+{% endfor %}
+{% else %}<div class="empty">♡<b>No hay reservas este día</b><span>Agrega una nueva propuesta cuando quieras.</span></div>{% endif %}
+</section>
+<section class="panel formpanel" id="nueva">
+<span class="eyebrow">NUEVO EVENTO</span><h2>Registrar reserva</h2>
+<form method="post" action="{{url_for('guardar')}}" class="booking-form">
+{% set r={} %}{% include 'form_fields.html' %}
+<div class="actions"><button class="primary">Guardar reserva</button></div>
+</form>
+</section>
+{% endif %}
+<footer>Hecho con cariño ♡ <b>Propuesta Montero By Mare</b></footer>
+</main>
+<script>
+const packages = {{ packages|tojson }};
+const selector=document.querySelector('#paquete'), price=document.querySelector('#precio'), details=document.querySelector('#detalles');
+function updatePackage(){if(selector && packages[selector.value]){price.value=packages[selector.value].price;details.textContent=packages[selector.value].details;}}
+if(selector){selector.addEventListener('change',updatePackage); if(selector.value) updatePackage();}
+function updateBalance(){const p=parseFloat(price?.value||0), paid=parseFloat(document.querySelector('#pagado')?.value||0);const el=document.querySelector('#saldo');if(el)el.textContent='Bs '+Math.max(0,p-paid).toFixed(2);}
+price?.addEventListener('input',updateBalance);document.querySelector('#pagado')?.addEventListener('input',updateBalance);updateBalance();
+</script>
 
+<script>
+const mareReservations = {{ rows|tojson }};
+const notificationButton = document.getElementById('enableNotifications');
+const notificationStorageKey = 'by-mare-notifications-sent-v1';
+
+function sentAlerts() {
+  try { return JSON.parse(localStorage.getItem(notificationStorageKey) || '{}'); }
+  catch (_) { return {}; }
+}
+function saveAlert(key) {
+  const sent = sentAlerts(); sent[key] = Date.now();
+  localStorage.setItem(notificationStorageKey, JSON.stringify(sent));
+}
+async function askNotificationPermission() {
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+    alert('Este navegador no admite notificaciones web. Usa Safari actualizado en iPhone o Chrome en Android.');
+    return;
+  }
+  if (Notification.permission === 'granted') {
+    alert('Los avisos ya están activados ♡');
+    return;
+  }
+  if (Notification.permission === 'denied') {
+    alert('Las notificaciones están bloqueadas. Actívalas en los ajustes del navegador o del teléfono.');
+    return;
+  }
+  const permission = await Notification.requestPermission();
+  if (permission === 'granted') {
+    alert('¡Avisos activados! Te avisaremos 24 horas y 2 horas antes, mientras la agenda esté abierta.');
+    checkUpcomingReservations();
+  } else {
+    alert('No se concedió permiso para enviar notificaciones.');
+  }
+}
+notificationButton?.addEventListener('click', askNotificationPermission);
+
+async function sendMareNotification(title, body, tag) {
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    await registration.showNotification(title, {
+      body, tag, icon: '/static/icon-192.png',
+      badge: '/static/icon-192.png',
+      data: { url: '/' }
+    });
+  } catch (_) {
+    new Notification(title, { body, tag });
+  }
+}
+function checkUpcomingReservations() {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const now = Date.now();
+  for (const item of mareReservations) {
+    if (!item.fecha || !item.hora) continue;
+    const eventTime = new Date(item.fecha + 'T' + item.hora).getTime();
+    const diff = eventTime - now;
+    if (diff <= 0) continue;
+    const hours = diff / 3600000;
+    let lead = null;
+    if (hours <= 2 && hours > 0) lead = '2h';
+    else if (hours <= 24 && hours > 2) lead = '24h';
+    if (!lead) continue;
+    const key = String(item.id) + ':' + lead;
+    if (sentAlerts()[key]) continue;
+    const label = lead === '24h' ? 'en 24 horas' : 'en 2 horas';
+    sendMareNotification('♡ Próxima propuesta', item.cliente + ' tiene una reserva ' + label + ' · ' + item.hora + ' · ' + item.lugar, key);
+    saveAlert(key);
+  }
+}
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/static/sw.js').then(() => {
+    checkUpcomingReservations();
+    window.setInterval(checkUpcomingReservations, 60000);
+  }).catch(() => {}));
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkUpcomingReservations(); });
+</script>
+</body></html>
