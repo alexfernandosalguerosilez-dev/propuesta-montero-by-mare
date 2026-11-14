@@ -1,0 +1,29 @@
+PROPUESTA MONTERO BY MARE - AGENDA PRIVADA
+==========================================
+
+Esta es una aplicación web instalable (PWA) para usar en computadora, Android y iPhone.
+Incluye acceso privado, calendario, reservas, paquetes, pagos y saldo pendiente.
+
+ACCESO INICIAL (cámbialo antes de compartir o publicar):
+Usuario: mare
+Contraseña: Mare2026!
+
+PUBLICACIÓN EN RENDER:
+1. Sube el CONTENIDO de esta carpeta a un repositorio privado de GitHub.
+2. En Render crea un Web Service conectado a ese repositorio.
+3. Build Command: pip install -r requirements.txt
+4. Start Command: gunicorn app:app
+5. En Environment agrega:
+   ADMIN_USER = tu usuario privado
+   ADMIN_PASSWORD = una contraseña larga y única
+   SECRET_KEY = una cadena larga aleatoria
+6. Deploy.
+
+IMPORTANTE SOBRE LOS DATOS:
+La aplicación guarda reservas en reservas.json dentro del servidor. En Render, el disco del sistema puede ser temporal y reiniciarse; para conservar reservas de forma fiable entre despliegues, configura un Persistent Disk montado en /var/data y adapta DB a /var/data/reservas.json, o usa una base de datos PostgreSQL. No guardes información real de clientes hasta configurar almacenamiento persistente.
+
+PRIVACIDAD:
+Todas las pantallas y acciones de reservas requieren iniciar sesión. No compartas el usuario ni contraseña. Activa HTTPS en el hosting (Render lo proporciona para el dominio).
+
+AVISOS:
+Los avisos del navegador se revisan mientras la agenda está abierta/activa; no se garantiza el envío si el navegador o la app están completamente cerrados. Para avisos push reales se requiere configurar un servicio de notificaciones push.
