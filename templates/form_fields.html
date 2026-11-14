@@ -1,1 +1,7 @@
-
+<label>Nombre del cliente<input name="cliente" required placeholder="Nombre completo" value="{{r.get('cliente','')}}"></label>
+<div class="two"><label>Fecha<input type="date" name="fecha" required value="{{r.get('fecha', selected or today)}}"></label><label>Hora<input type="time" name="hora" required value="{{r.get('hora','19:00')}}"></label></div>
+<label>Lugar de la propuesta<input name="lugar" required placeholder="Ej. Salón, domicilio o lugar" value="{{r.get('lugar','')}}"></label>
+<label>Paquete del catálogo<select name="paquete" id="paquete"><option value="">Seleccionar paquete</option>{% for name,p in packages.items() %}<option value="{{name}}" {% if r.get('paquete')==name %}selected{% endif %}>{{name}} · Bs {{p.price}}</option>{% endfor %}</select></label>
+<div class="package-details" id="detalles">Elige un paquete para ver qué incluye.</div>
+<div class="two"><label>Precio del catálogo (Bs)<input id="precio" name="precio" type="number" min="0" step="0.01" required placeholder="0.00" value="{{r.get('precio_catalogo','')}}"></label><label>Pagado hasta ahora (Bs)<input id="pagado" name="pagado" type="number" min="0" step="0.01" placeholder="Anticipo o total" value="{{r.get('pagado','')}}"></label></div>
+<div class="balance">Saldo pendiente <b id="saldo">Bs 0.00</b><small>Registra el 50% de anticipo y actualiza el pago cuando cancele el total.</small></div>
